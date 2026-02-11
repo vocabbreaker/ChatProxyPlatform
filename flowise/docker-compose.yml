@@ -96,7 +96,8 @@ networks:
   flowise-network:
     driver: bridge
   chatproxy-network:
-    external: true
+    driver: bridge
+    name: chatproxy-network
 
 volumes:
   flowise_data:
