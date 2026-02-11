@@ -66,6 +66,43 @@ echo.
     findstr "POSTGRES_PASSWORD" .env
     echo.
     
+    echo [9] Docker logs - flowise-postgres:
+    echo ----------------------------------------
+    docker logs flowise-postgres --tail 50 2>&1
+    if errorlevel 1 (
+        echo [INFO] Container flowise-postgres not running or not found
+    )
+    echo ----------------------------------------
+    echo.
+    
+    echo [10] Docker logs - flowise:
+    echo ----------------------------------------
+    docker logs flowise --tail 50 2>&1
+    if errorlevel 1 (
+        echo [INFO] Container flowise not running or not found
+    )
+    echo ----------------------------------------
+    echo.
+    
+    echo [11] Docker inspect - flowise-postgres:
+    echo ----------------------------------------
+    docker inspect flowise-postgres 2>&1
+    if errorlevel 1 (
+        echo [INFO] Container flowise-postgres not found
+    )
+    echo ----------------------------------------
+    echo.
+    
+    echo [12] Network inspection:
+    echo ----------------------------------------
+    docker network ls
+    docker network inspect flowise_flowise-network 2>&1
+    if errorlevel 1 (
+        echo [INFO] Network flowise_flowise-network not found
+    )
+    echo ----------------------------------------
+    echo.
+    
     echo ========================================
     echo End of Debug Report
     echo ========================================
