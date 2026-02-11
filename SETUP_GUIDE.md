@@ -6,7 +6,23 @@ Complete step-by-step guide to deploy the ChatProxy Platform on Windows using Do
 
 ## 🚀 Quick Start
 
-**For fresh Windows installations (no prior setup):**
+**After Git Clone (IMPORTANT - First Time Setup):**
+
+If you just cloned the repository, **you must create `.env` files first** (they're not in git):
+
+```batch
+# 1. Clone the repository (if not done yet)
+git clone https://github.com/enoch-sit/ChatProxyPlatform.git
+cd ChatProxyPlatform
+
+# 2. Create all .env files from templates
+setup_env_files.bat
+
+# 3. Generate and populate JWT secrets automatically
+generate_secrets.bat
+```
+
+**For fresh Windows installations (after .env setup):**
 1. **Configure drives** - Run **`configure_drives.bat`** to automatically detect RAID and optimize storage paths
 2. Read the complete **[DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md)** - step-by-step guide for beginners
 3. Track your progress with **[DEPLOYMENT_PROGRESS.md](DEPLOYMENT_PROGRESS.md)** - printable checklist
@@ -14,6 +30,151 @@ Complete step-by-step guide to deploy the ChatProxy Platform on Windows using Do
 
 **For existing installations:**
 Continue with this guide below.
+
+---
+
+## 🔧 Prerequisites Setup
+
+### Initial Repository Setup (Git Clone)
+
+**CRITICAL:** After cloning the repository, `.env` files don't exist (they're in `.gitignore`). You must create them:
+
+#### Step 1: Create Environment Files
+
+**What files are needed?**
+
+The platform requires `.env` configuration files for all 5 services:
+1. ✅ `flowise/.env` - Flowise AI + PostgreSQL configuration
+2. ✅ `auth-service/.env` - Authentication service + MongoDB + JWT secrets
+3. ✅ `accounting-service/.env` - Accounting service + PostgreSQL + JWT secrets
+4. ✅ `flowise-proxy-service-py/.env` - Proxy service + MongoDB + JWT secrets
+5. ✅ `bridge/.env` - Frontend React app configuration
+
+**Automated Setup (Recommended):**
+
+Run the automated setup script:
+```batch
+setup_env_files.bat
+```
+
+**What it does:**
+- ✅ Scans all 5 services for `.env.example` templates
+- ✅ Copies each `.env.example` → `.env` if not already exists
+- ✅ Skips if `.env` already exists (safe to re-run)
+- ✅ Shows color-coded summary (copied/skipped/errors)
+- ✅ Provides next steps for JWT secret generation
+
+**Expected output:**
+```
+╔════════════════════════════════════════════════════════════════╗
+║   ChatProxy Platform - Environment File Setup                  ║
+║   Creating .env files from templates                           ║
+╚════════════════════════════════════════════════════════════════╝
+
+[OK] Flowise AI Flow Builder - Created .env file
+[OK] Authentication Service - Created .env file
+[OK] Accounting Service - Created .env file
+[OK] Flowise Proxy Service - Created .env file
+[OK] Bridge UI Frontend - Created .env file
+
+════════════════════════════════════════════════════════════════
+Summary:
+  ✓ Copied: 5
+  ○ Skipped: 0
+  ✗ Errors: 0
+════════════════════════════════════════════════════════════════
+```
+
+**Manual alternative (if script fails):**
+```batch
+copy flowise\.env.example flowise\.env
+copy auth-service\.env.example auth-service\.env
+copy accounting-service\.env.example accounting-service\.env
+copy flowise-proxy-service-py\.env.example flowise-proxy-service-py\.env
+copy bridge\.env.example bridge\.env
+```
+
+**Verify all files were created:**
+```powershell
+# Check if all .env files exist
+Test-Path flowise\.env
+Test-Path auth-service\.env
+Test-Path accounting-service\.env
+Test-Path flowise-proxy-service-py\.env
+Test-Path bridge\.env
+```
+
+All should return `True`.
+
+⚠️ **IMPORTANT:** The script creates files but does NOT fill in JWT secrets. Continue to Step 2.
+
+#### Step 2: Generate and Populate JWT Secrets
+
+**CRITICAL:** JWT secrets must be **identical** across three services (auth-service, accounting-service, flowise-proxy).
+
+**Automated secret generation (Recommended):**
+```batch
+generate_secrets.bat
+```
+
+**What it does:**
+- ✅ Generates 64-character cryptographically secure JWT secrets
+- ✅ Automatically updates all three .env files with the SAME secrets
+- ✅ Creates backup files (.env.backup) before updating
+- ✅ Verifies all files exist before proceeding
+- ✅ Shows color-coded success/error messages
+
+**Expected output:**
+```
+══════════════════════════════════════════════════════════════════
+ChatProxy Platform - JWT Secret Generator
+══════════════════════════════════════════════════════════════════
+
+ℹ Workspace: C:\Users\user\...\ThankGodForChatProxyPlatform
+ℹ Checking for .env files...
+✓ auth-service/.env found
+✓ accounting-service/.env found
+✓ flowise-proxy-service-py/.env found
+
+ℹ Generating cryptographically secure JWT secrets...
+✓ JWT_ACCESS_SECRET: a1b2c3d4e5f6g7h8i9j0... (64 chars)
+✓ JWT_REFRESH_SECRET: z9y8x7w6v5u4t3s2r1q0... (64 chars)
+
+ℹ Updating .env files with JWT secrets...
+✓ auth-service/.env updated with JWT secrets
+✓ accounting-service/.env updated with JWT secrets
+✓ flowise-proxy-service-py/.env updated with JWT secrets
+
+══════════════════════════════════════════════════════════════════
+Summary
+══════════════════════════════════════════════════════════════════
+✓ All 3 services updated successfully!
+✓ Same JWT secrets copied to all three services
+
+ℹ Backups created: <service>/.env.backup
+ℹ Next step: Start services with docker compose
+```
+
+**Verify secrets were populated:**
+```powershell
+# Check that JWT secrets are present and identical
+findstr "JWT_ACCESS_SECRET" auth-service\.env accounting-service\.env flowise-proxy-service-py\.env
+```
+
+All three should show **identical values** (not placeholders like `your-secret-key-here`).
+
+**Manual alternative (if automated script fails):**
+```powershell
+# 1. Generate secrets using Python directly
+python generate_secrets.py
+
+# 2. If Python script fails, manually edit .env files:
+#    - auth-service\.env
+#    - accounting-service\.env  
+#    - flowise-proxy-service-py\.env
+#
+# Generate 64-char random strings and paste SAME values in all three!
+```
 
 ---
 
@@ -176,21 +337,31 @@ JWT (JSON Web Token) secrets are used to sign authentication tokens across all s
 
 ### 2.2 Generate Secrets Automatically
 
-**Option A: PowerShell Script (Recommended)**
+**Automated JWT Secret Generation (Recommended)**
 
-```powershell
-# Run the secret generator
-cd c:\Users\user\Documents\ThankGodForJesusChrist\ThankGodForChatProxyPlatform
-.\generate-secrets.ps1
+```batch
+# Run the automated secret generator
+generate_secrets.bat
 ```
+
+This will automatically:
+- Generate cryptographically secure 64-character JWT secrets
+- Update all three .env files with identical secrets
+- Create backup files before updating
+- Verify all files exist
 
 **Output:**
 ```
-Generated Secrets for Deployment:
-=================================
+ChatProxy Platform - JWT Secret Generator
 
-JWT_ACCESS_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0
-JWT_REFRESH_SECRET=z9y8x7w6v5u4t3s2r1q0p9o8n7m6l5k4j3i2h1g0f9e8d7c6b5a4z3y2x1w0
+ℹ Checking for .env files...
+✓ auth-service/.env found
+✓ accounting-service/.env found
+✓ flowise-proxy-service-py/.env found
+
+ℹ Generating cryptographically secure JWT secrets...
+✓ JWT_ACCESS_SECRET: a1b2c3d4e5f6g7h8i9j0... (64 chars)
+✓ JWT_REFRESH_SECRET: z9y8x7w6v5u4t3s2r1q0... (64 chars)
 MONGO_PASSWORD=1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p
 POSTGRES_PASSWORD=9z8y7x6w5v4u3t2s1r0q9p8o7n6m5l4k
 

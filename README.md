@@ -12,11 +12,11 @@
 
 **For complete beginners (no technical knowledge):**
 ```bash
-# 1. After git clone, create environment files
+# 1. After git clone, create environment files from templates
 setup_env_files.bat
 
-# 2. Generate JWT secrets
-powershell .\generate-secrets.ps1
+# 2. Generate and populate JWT secrets automatically
+generate_secrets.bat
 
 # 3. Configure drives automatically (detects RAID, updates paths)
 configure_drives.bat
@@ -61,6 +61,8 @@ sync_all_users.bat
 - **[README_FRESH_INSTALL.md](README_FRESH_INSTALL.md)** - Fresh Windows installation package overview
 
 ### System Tools
+- **[generate_secrets.py](generate_secrets.py)** / **[.bat](generate_secrets.bat)** - Automated JWT secret generation and .env population
+- **[setup_env_files.bat](setup_env_files.bat)** - Automated .env file creation from templates
 - **[configure_drives.py](configure_drives.py)** / **[.bat](configure_drives.bat)** - Automated drive detection, RAID check, and path configuration
 - **[check_drives_and_setup.bat](check_drives_and_setup.bat)** - Interactive drive configuration assistant (manual)
 - **[check_system.bat](check_system.bat)** - Automated system health checker

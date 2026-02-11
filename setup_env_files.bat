@@ -42,13 +42,11 @@ if %COPIED% GTR 0 (
     echo.
     echo [33m[IMPORTANT][0m Next steps:
     echo.
-    echo 1. Generate JWT secrets:
-    echo    powershell .\generate-secrets.ps1
+    echo 1. Generate and populate JWT secrets automatically:
+    echo    generate_secrets.bat
     echo.
-    echo 2. Update JWT secrets in these files:
-    echo    - auth-service\.env
-    echo    - accounting-service\.env
-    echo    - flowise-proxy-service-py\.env
+    echo 2. Configure drive paths (optional):
+    echo    configure_drives.bat
     echo.
     echo 3. Review and customize other settings in each .env file
     echo.
