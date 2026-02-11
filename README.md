@@ -12,10 +12,13 @@
 
 **For complete beginners (no technical knowledge):**
 ```bash
-# 1. Check your system
+# 1. Configure drives automatically (detects RAID, updates paths)
+configure_drives.bat
+
+# 2. Check your system
 check_system.bat
 
-# 2. Follow the step-by-step guide
+# 3. Follow the step-by-step guide
 # Open: DEPLOYMENT_PLAN.md
 ```
 
@@ -52,6 +55,8 @@ sync_all_users.bat
 - **[README_FRESH_INSTALL.md](README_FRESH_INSTALL.md)** - Fresh Windows installation package overview
 
 ### System Tools
+- **[configure_drives.py](configure_drives.py)** / **[.bat](configure_drives.bat)** - Automated drive detection, RAID check, and path configuration
+- **[check_drives_and_setup.bat](check_drives_and_setup.bat)** - Interactive drive configuration assistant (manual)
 - **[check_system.bat](check_system.bat)** - Automated system health checker
 
 ### Technical Documentation

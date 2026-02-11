@@ -7,12 +7,85 @@ Complete step-by-step guide to deploy the ChatProxy Platform on Windows using Do
 ## 🚀 Quick Start
 
 **For fresh Windows installations (no prior setup):**
-1. Read the complete **[DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md)** - step-by-step guide for beginners
-2. Track your progress with **[DEPLOYMENT_PROGRESS.md](DEPLOYMENT_PROGRESS.md)** - printable checklist
-3. Run **`check_system.bat`** - automated system checker for prerequisites
+1. **Configure drives** - Run **`configure_drives.bat`** to automatically detect RAID and optimize storage paths
+2. Read the complete **[DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md)** - step-by-step guide for beginners
+3. Track your progress with **[DEPLOYMENT_PROGRESS.md](DEPLOYMENT_PROGRESS.md)** - printable checklist
+4. Run **`check_system.bat`** - automated system checker for prerequisites
 
 **For existing installations:**
 Continue with this guide below.
+
+---
+
+## 📊 Drive Configuration (Optional but Recommended)
+
+### Why Configure Drives?
+
+If your system has multiple drives (especially RAID), optimizing storage locations can provide:
+- ✅ Better performance (separate database I/O from system drive)
+- ✅ Data redundancy (RAID protection)
+- ✅ More capacity for data growth
+- ✅ Easier backup management
+
+### Automated Drive Configuration
+
+**Step 1: Run the configuration tool**
+```batch
+configure_drives.bat
+```
+
+**What it does:**
+1. Detects available drives (C:, D:, E:, etc.)
+2. Checks for RAID configuration (hardware and software)
+3. Calculates free space on each drive
+4. Recommends optimal storage configuration
+5. Offers to:
+   - Preview changes (dry-run)
+   - Apply changes automatically
+   - Create directory structure
+
+**Step 2: Choose your option**
+- **[1] Preview changes** - See what will be updated without modifying files
+- **[2] Apply changes** - Update docker-compose.yml and .env files automatically
+- **[3] Cancel** - Exit without changes
+
+**What gets updated:**
+- `auth-service/docker-compose.dev.yml` - MongoDB volume paths
+- `accounting-service/docker-compose.yml` - PostgreSQL volume paths
+- `flowise/docker-compose.yml` - PostgreSQL volume paths
+- `flowise-proxy-service-py/docker-compose.yml` - MongoDB volume paths
+- `flowise-proxy-service-py/.env` - File storage and log paths
+
+**Created directories:**
+```
+D:\DockerVolumes\
+├── mongodb-auth\
+├── mongodb-proxy\
+├── postgres-accounting\
+└── flowise-postgres\
+
+D:\ChatProxyData\
+├── uploads\
+├── logs\
+└── backups\
+```
+
+**Safety features:**
+- ✅ Always creates backups before modifying files
+- ✅ Preserves YAML formatting and comments
+- ✅ Validates changes before applying
+- ✅ Dry-run mode to preview first
+
+### Manual Drive Configuration
+
+If you prefer manual configuration or want to use a custom drive:
+
+1. **Edit docker-compose.yml files** - Update volume paths to your preferred location
+2. **Edit .env files** - Update FILE_STORAGE_PATH and LOG_PATH
+3. **Create directories** - Manually create required folders
+4. **Restart services** - Apply the new configuration
+
+See [check_drives_and_setup.bat](check_drives_and_setup.bat) for detailed manual instructions.
 
 ---
 
@@ -22,6 +95,7 @@ Continue with this guide below.
 - Git (for cloning the repository)
 - Python 3.x installed
 - Windows PowerShell or Command Prompt
+- **Optional:** D: drive with RAID for optimal data storage
 
 **Quick Check:** Run `check_system.bat` to verify all prerequisites are met.
 
@@ -305,9 +379,49 @@ auth-service\quickCreateAdminPy\TEACHER_GUIDE.md
   docker exec -i mongodb-auth mongosh auth_db --eval "db.users.find()"
   ```
 
+### Drive configuration issues
+- **Permission denied:** Run `configure_drives.bat` as administrator
+- **RAID not detected:** Check your storage controller software or run `wmic diskdrive get model`
+- **Path update failed:** Check backup folder `config_backup_YYYYMMDD_HHMMSS` and restore if needed
+- **Services won't start after path change:** Verify directory structure exists on target drive
+
+### After changing drive configuration
+1. **Stop all services:**
+   ```batch
+   cd flowise && stop.bat
+   cd ..\auth-service && stop.bat
+   cd ..\accounting-service && stop.bat
+   cd ..\flowise-proxy-service-py && docker-compose down
+   cd ..\bridge && stop.bat
+   ```
+
+2. **Verify directories exist:**
+   ```batch
+   dir D:\DockerVolumes
+   dir D:\ChatProxyData
+   ```
+
+3. **Restart services** in order (see Management Commands below)
+
+4. **Run system check:**
+   ```batch
+   check_system.bat
+   ```
+
 ---
 
 ## Management Commands
+
+### Drive Configuration
+```batch
+configure_drives.bat       # Automated drive detection and path update
+check_drives_and_setup.bat # Interactive manual configuration
+```
+
+### System Health
+```batch
+check_system.bat           # Comprehensive system check
+```
 
 ### Flowise
 ```batch
@@ -325,11 +439,79 @@ rebuild.bat                # Rebuild after changes
 logs.bat                   # View logs
 ```
 
+### Accounting Service
+```batch
+cd accounting-service
+start.bat                  # Start
+stop.bat                   # Stop
+rebuild.bat                # Rebuild after changes
+logs.bat                   # View logs
+```
+
+### Flowise Proxy
+```batch
+cd flowise-proxy-service-py
+docker-compose up -d       # Start
+docker-compose down        # Stop
+docker-compose restart     # Restart
+logs.bat                   # View logs
+```
+
+### Bridge UI
+```batch
+cd bridge
+start.bat                  # Start
+stop.bat                   # Stop
+rebuild.bat                # Rebuild after changes
+logs.bat                   # View logs
+```
+
 ### User Management
 ```batch
 cd auth-service\quickCreateAdminPy
 notepad users.csv          # Edit users/credits
 sync_all_users.bat         # Apply all changes
+```
+
+---
+
+## Backup and Restore
+
+### Automated Backup (Recommended)
+
+If you used `configure_drives.bat`, backups will be stored on your data drive.
+
+**Create manual backup:**
+```batch
+# MongoDB (Auth)
+docker exec mongodb-auth mongodump --out /backup
+docker cp mongodb-auth:/backup D:\ChatProxyData\backups\mongodb-auth
+
+# MongoDB (Proxy)
+docker exec mongodb mongodump --out /backup
+docker cp mongodb:/backup D:\ChatProxyData\backups\mongodb-proxy
+
+# PostgreSQL (Accounting)
+docker exec postgres-accounting pg_dump -U postgres accounting > D:\ChatProxyData\backups\accounting.sql
+
+# PostgreSQL (Flowise)
+docker exec flowise-postgres pg_dump -U postgres flowise > D:\ChatProxyData\backups\flowise.sql
+
+# Configuration files
+copy auth-service\quickCreateAdminPy\users.csv D:\ChatProxyData\backups\
+```
+
+### Restore from Backup
+
+**MongoDB:**
+```batch
+docker cp D:\ChatProxyData\backups\mongodb-auth mongodb-auth:/backup
+docker exec mongodb-auth mongorestore /backup
+```
+
+**PostgreSQL:**
+```batch
+type D:\ChatProxyData\backups\accounting.sql | docker exec -i postgres-accounting psql -U postgres accounting
 ```
 
 ---
@@ -344,12 +526,31 @@ Before deploying to production:
 3. Configure proper CORS origins
 4. Enable HTTPS
 5. Set up proper database backups
+6. Review drive configuration for RAID/redundancy
+7. Implement automated backup schedule
 
 ---
 
 ## Support
 
-For issues or questions, check:
-- Service logs using `logs.bat` in each service directory
-- Docker container status: `docker ps -a`
-- Network connectivity: `docker network ls`
+For issues or questions:
+
+**Quick Diagnostics:**
+1. Run `check_system.bat` for comprehensive system check
+2. Check service logs: `logs.bat` in each service directory
+3. Docker status: `docker ps -a`
+4. Network: `docker network ls`
+
+**Documentation:**
+- [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) - Complete setup guide
+- [README.md](README.md) - Project overview
+- [docs/SERVICE_ARCHITECTURE.md](docs/SERVICE_ARCHITECTURE.md) - Architecture details
+- [docs/JWT_AUTHENTICATION_FIXES.md](docs/JWT_AUTHENTICATION_FIXES.md) - Authentication details
+
+**Common Issues:**
+- Port conflicts: `netstat -ano | findstr ":3000 :3001 :3002 :3082 :8000"`
+- Docker not running: Check Docker Desktop
+- Path issues: Verify drive configuration with `configure_drives.bat`
+- Permission issues: Run as administrator
+
+---
