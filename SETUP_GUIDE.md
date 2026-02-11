@@ -165,9 +165,133 @@ The Flowise Proxy Service requires an API key to sync chatflows from Flowise.
 
 ---
 
-## Step 2: Launch Auth Service
+## Step 2: Generate JWT Secrets (Security Setup)
 
-### 2.1 Start Auth Service Containers
+### 2.1 Why Generate JWT Secrets?
+
+JWT (JSON Web Token) secrets are used to sign authentication tokens across all services. For security:
+- ✅ **Same secrets** must be used in auth-service, accounting-service, and flowise-proxy
+- ✅ **Unique secrets** should be generated for each deployment
+- ✅ **Strong secrets** prevent token forgery and unauthorized access
+
+### 2.2 Generate Secrets Automatically
+
+**Option A: PowerShell Script (Recommended)**
+
+```powershell
+# Run the secret generator
+cd c:\Users\user\Documents\ThankGodForJesusChrist\ThankGodForChatProxyPlatform
+.\generate-secrets.ps1
+```
+
+**Output:**
+```
+Generated Secrets for Deployment:
+=================================
+
+JWT_ACCESS_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0
+JWT_REFRESH_SECRET=z9y8x7w6v5u4t3s2r1q0p9o8n7m6l5k4j3i2h1g0f9e8d7c6b5a4z3y2x1w0
+MONGO_PASSWORD=1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p
+POSTGRES_PASSWORD=9z8y7x6w5v4u3t2s1r0q9p8o7n6m5l4k
+
+IMPORTANT: Use the SAME JWT secrets across all three services!
+```
+
+**Option B: Node.js Command**
+
+```batch
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Run twice to generate `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`.
+
+**Option C: PowerShell One-liner**
+
+```powershell
+[System.Guid]::NewGuid().ToString('N') + [System.Guid]::NewGuid().ToString('N')
+```
+
+### 2.3 Update .env Files
+
+**CRITICAL:** JWT secrets must be **identical** across these three services:
+
+#### **1. auth-service/.env**
+
+```batch
+cd auth-service
+notepad .env
+```
+
+Update these lines:
+```env
+JWT_ACCESS_SECRET=your_generated_access_secret_here
+JWT_REFRESH_SECRET=your_generated_refresh_secret_here
+JWT_ACCESS_EXPIRES_IN=1h
+JWT_REFRESH_EXPIRES_IN=7d
+```
+
+#### **2. accounting-service/.env**
+
+```batch
+cd ..\accounting-service
+notepad .env
+```
+
+Update these lines (use the **SAME values** as auth-service):
+```env
+JWT_ACCESS_SECRET=your_generated_access_secret_here
+JWT_REFRESH_SECRET=your_generated_refresh_secret_here
+```
+
+#### **3. flowise-proxy-service-py/.env**
+
+```batch
+cd ..\flowise-proxy-service-py
+notepad .env
+```
+
+Update these lines (use the **SAME values** as auth-service):
+```env
+JWT_ACCESS_SECRET=your_generated_access_secret_here
+JWT_REFRESH_SECRET=your_generated_refresh_secret_here
+```
+
+### 2.4 Security Best Practices
+
+✅ **Do:**
+- Generate unique secrets for each deployment (dev, staging, production)
+- Use secrets that are at least 32 characters long
+- Keep secrets in `.env` files (never commit to git)
+- Use the same JWT secrets across all services
+- Rotate secrets periodically (every 90 days)
+
+❌ **Don't:**
+- Use default/example secrets in production
+- Commit `.env` files to version control
+- Share secrets via email or chat
+- Use different JWT secrets between services (tokens won't validate)
+
+### 2.5 Verify Configuration
+
+Before starting services, verify all three `.env` files have:
+- ✅ Same `JWT_ACCESS_SECRET`
+- ✅ Same `JWT_REFRESH_SECRET`
+- ✅ `JWT_ACCESS_EXPIRES_IN=1h` (auth-service only)
+- ✅ `JWT_REFRESH_EXPIRES_IN=7d` (auth-service only)
+
+**Quick check:**
+```powershell
+# Compare JWT secrets across services
+findstr "JWT_ACCESS_SECRET" auth-service\.env accounting-service\.env flowise-proxy-service-py\.env
+```
+
+All three should show the same value.
+
+---
+
+## Step 3: Launch Auth Service
+
+### 3.1 Start Auth Service Containers
 
 ```batch
 cd c:\Users\user\Documents\ThankGodForJesusChrist\ThankGodForChatProxyPlatform\auth-service
@@ -201,7 +325,7 @@ list_users.bat
 
 ---
 
-## Step 3: Manage Users and Credits (CSV-Based System)
+## Step 4: Manage Users and Credits (CSV-Based System)
 
 ### 3.1 Overview
 
