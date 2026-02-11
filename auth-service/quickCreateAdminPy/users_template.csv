@@ -1,0 +1,23 @@
+action,username,email,password,role,fullName
+create,teacher1,teacher1@school.com,Teacher@123,teacher,John Smith
+create,teacher2,teacher2@school.com,Teacher@456,teacher,Jane Doe
+create,student1,student1@school.com,Student@123,student,Alice Johnson
+create,student2,student2@school.com,Student@456,student,Bob Wilson
+create,student3,student3@school.com,Student@789,student,Carol Martinez
+delete,olduser1,olduser1@school.com,,,
+delete,olduser2,olduser2@school.com,,,
+
+# CSV Format Instructions:
+# ========================
+# action     - Required: "create" or "delete"
+# username   - Required: Unique username (3-50 characters)
+# email      - Required: Valid email address
+# password   - Required for create: Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char
+# role       - Optional: "admin", "supervisor", "teacher", "student", "enduser" (default: enduser)
+# fullName   - Optional: User's full name
+#
+# Notes:
+# - Lines starting with # are ignored
+# - Empty lines are ignored
+# - For delete action, only username and email are needed
+# - Passwords are not needed for delete action

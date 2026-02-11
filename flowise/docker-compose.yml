@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  flowise:
+    image: flowiseai/flowise:latest
+    container_name: flowise
+    restart: unless-stopped
+    environment:
+      # Port Configuration
+      - PORT=${PORT:-3002}
+      
+      # Database Configuration
+      - DATABASE_TYPE=${DATABASE_TYPE:-postgres}
+      - DATABASE_HOST=${DATABASE_HOST:-flowise-postgres}
+      - DATABASE_PORT=${DATABASE_PORT:-5432}
+      - DATABASE_NAME=${DATABASE_NAME:-flowise}
+      - DATABASE_USER=${DATABASE_USER:-flowiseuser}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-flowisepass}
+      - DATABASE_PATH=${DATABASE_PATH:-/root/.flowise}
+      
+      # Storage Configuration
+      - STORAGE_TYPE=${STORAGE_TYPE:-local}
+      - BLOB_STORAGE_PATH=${BLOB_STORAGE_PATH:-/root/.flowise/storage}
+      
+      # Secret Keys
+      - SECRETKEY_PATH=${SECRETKEY_PATH:-/root/.flowise}
+      - FLOWISE_SECRETKEY_OVERWRITE=${FLOWISE_SECRETKEY_OVERWRITE:-}
+      
+      # Logging
+      - DEBUG=${DEBUG:-false}
+      - LOG_PATH=${LOG_PATH:-/root/.flowise/logs}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      
+      # CORS and Security
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - IFRAME_ORIGINS=${IFRAME_ORIGINS:-*}
+      
+      # File Upload
+      - FLOWISE_FILE_SIZE_LIMIT=${FLOWISE_FILE_SIZE_LIMIT:-50mb}
+      
+      # Authentication (Optional - for multi-user setup)
+      - FLOWISE_USERNAME=${FLOWISE_USERNAME:-}
+      - FLOWISE_PASSWORD=${FLOWISE_PASSWORD:-}
+      - JWT_AUTH_TOKEN_SECRET=${JWT_AUTH_TOKEN_SECRET:-}
+      - JWT_REFRESH_TOKEN_SECRET=${JWT_REFRESH_TOKEN_SECRET:-}
+      
+      # Telemetry
+      - DISABLE_FLOWISE_TELEMETRY=${DISABLE_FLOWISE_TELEMETRY:-true}
+      
+      # Community Nodes
+      - SHOW_COMMUNITY_NODES=${SHOW_COMMUNITY_NODES:-true}
+      
+    ports:
+      - "${PORT:-3002}:${PORT:-3002}"
+    
+    depends_on:
+      flowise-postgres:
+        condition: service_healthy
+    
+    volumes:
+      - flowise_data:/root/.flowise
+    
+    networks:
+      - flowise-network
+      - chatproxy-network
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:${PORT:-3002}/api/v1/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL database for Flowise
+  flowise-postgres:
+    image: postgres:15-alpine
+    container_name: flowise-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-flowise}
+      - POSTGRES_USER=${POSTGRES_USER:-flowiseuser}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-flowisepass}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flowise-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-flowiseuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  flowise-network:
+    driver: bridge
+  chatproxy-network:
+    external: true
+
+volumes:
+  flowise_data:
+    driver: local
+  postgres_data:
+    driver: local

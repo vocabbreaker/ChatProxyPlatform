@@ -1,0 +1,14 @@
+# Environment files
+.env.local
+.env.production
+
+# Flowise data
+flowise-data/
+
+# Backups
+*.sql
+flowise-backup/
+
+# Logs
+*.log
+logs/

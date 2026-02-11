@@ -1,0 +1,10 @@
+action,username,email,password,role,fullName,credits
+create,admin,admin@example.com,admin@admin,admin,Administrator,5000
+create,teacher1,teacher1@school.com,Teacher@2026,teacher,John Smith,5000
+create,teacher2,teacher2@school.com,Teacher@2026,teacher,Jane Doe,5000
+create,teacher3,teacher3@school.com,Teacher@2026,teacher,Michael Brown,5000
+create,student1,student1@school.com,Student@2026,student,Alice Johnson,1000
+create,student2,student2@school.com,Student@2026,student,Bob Wilson,1000
+create,student3,student3@school.com,Student@2026,student,Carol Martinez,1000
+create,student4,student4@school.com,Student@2026,student,David Lee,1000
+create,student5,student5@school.com,Student@2026,student,Emma Davis,1000
