@@ -197,11 +197,13 @@ start.bat
 
 **Create users from CSV:**
 ```batch
-cd auth-service\quickCreateAdminPy
+cd ChatProxyPlatform\auth-service\quickCreateAdminPy
 manage_users_admin.bat
 ```
 
-⚠️ **Note:** Right-click and select "Run as administrator"
+⚠️ **Note:** 
+- Right-click `manage_users_admin.bat` and select "Run as administrator"
+- Make sure you've run `git pull` first to get the latest files including `users_template.csv`
 
 **Default Admin Credentials:**
 - **Username:** `admin`

@@ -4,9 +4,14 @@ REM CSV User Management - Admin Rights Required
 REM ============================================
 REM Creates and deletes users from users.csv file
 
+REM Change to the script's directory (important when run as admin)
+cd /d "%~dp0"
+
 echo ============================================
 echo CSV User Management Script
 echo ============================================
+echo.
+echo Working directory: %CD%
 echo.
 
 REM Check for admin rights
