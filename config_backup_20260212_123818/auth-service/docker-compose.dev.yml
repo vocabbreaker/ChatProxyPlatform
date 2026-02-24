@@ -8,18 +8,18 @@ services:
       dockerfile: Dockerfile
     container_name: auth-service
     ports:
-    - "3000:3000"
+      - "3000:3000"
     volumes:
-    - .:/app
-    - /app/node_modules
+      - .:/app
+      - /app/node_modules
     env_file:
-    - .env
+      - .env
     depends_on:
-    - mongodb
-    - mailhog
+      - mongodb
+      - mailhog
     networks:
-    - auth-network
-    - chatproxy-network
+      - auth-network
+      - chatproxy-network
     restart: unless-stopped
     command: npm run dev
 
@@ -28,13 +28,13 @@ services:
     image: mongo:6.0
     container_name: mongodb-auth
     ports:
-    - "27017:27017"
+      - "27017:27017"
     volumes:
-    - D:/DockerVolumes/mongodb-auth:/data/db
+      - mongodb-data:/data/db
     environment:
-    - MONGO_INITDB_DATABASE=auth_db
+      - MONGO_INITDB_DATABASE=auth_db
     networks:
-    - auth-network
+      - auth-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -47,10 +47,10 @@ services:
     image: mailhog/mailhog:latest
     container_name: auth-mailhog
     ports:
-    - "1025:1025"    # SMTP server port
-    - "8025:8025"    # Web UI port
+      - "1025:1025"  # SMTP server port
+      - "8025:8025"  # Web UI port
     networks:
-    - auth-network
+      - auth-network
     restart: unless-stopped
 # Test service that can run test suites
   # auth-test:
