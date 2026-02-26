@@ -47,6 +47,9 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
+# Get the workspace root (script's directory)
+WORKSPACE_ROOT = Path(__file__).parent.resolve()
+
 # Enable ANSI escape codes on Windows
 if os.name == 'nt':
     kernel32 = ctypes.windll.kernel32
@@ -173,6 +176,29 @@ def check_git() -> bool:
     print_success(f"Git found: {stdout.strip()}")
     return True
 
+def check_nodejs() -> bool:
+    """Check if Node.js is installed"""
+    print_info("Checking Node.js installation...")
+    
+    code, stdout, stderr = run_command(["node", "--version"])
+    if code != 0:
+        print_error("Node.js is not installed")
+        print_info("Node.js is required for building the services")
+        print_info("Please install Node.js LTS from: https://nodejs.org/")
+        print_info("Or use winget: winget install OpenJS.NodeJS.LTS")
+        return False
+    
+    print_success(f"Node.js found: {stdout.strip()}")
+    
+    # Check npm
+    code, stdout, stderr = run_command(["npm", "--version"])
+    if code != 0:
+        print_error("npm is not available")
+        return False
+    
+    print_success(f"npm found: {stdout.strip()}")
+    return True
+
 def check_drive_space() -> Dict[str, Tuple[float, float]]:
     """
     Check available space on all drives
@@ -235,7 +261,7 @@ def select_data_drive(drives: Dict[str, Tuple[float, float]]) -> str:
 
 def load_existing_secrets() -> Tuple[Optional[str], Optional[str]]:
     """Load JWT secrets from existing .env file if available"""
-    env_path = Path.cwd() / "auth-service" / ".env"
+    env_path = WORKSPACE_ROOT / "auth-service" / ".env"
     jwt_access = None
     jwt_refresh = None
     
@@ -321,7 +347,7 @@ def configure_docker_volumes(data_drive: str):
     """Update docker-compose files to use specified drive"""
     print_info(f"Configuring Docker volumes on drive {data_drive}...")
     
-    base_path = Path.cwd()
+    base_path = WORKSPACE_ROOT
     volume_base = f"{data_drive}:/DockerVolumes"
     
     services = [
@@ -368,7 +394,7 @@ def start_flowise():
     """Start Flowise service"""
     print_info("Starting Flowise service...")
     
-    flowise_dir = Path.cwd() / "flowise"
+    flowise_dir = WORKSPACE_ROOT / "flowise"
     
     # Check if directory exists
     if not flowise_dir.exists():
@@ -453,7 +479,7 @@ def get_flowise_api_key() -> str:
     print_header("Flowise API Key Configuration")
     
     # Check if API key already exists in flowise-proxy-service-py/.env
-    proxy_env = Path.cwd() / "flowise-proxy-service-py" / ".env"
+    proxy_env = WORKSPACE_ROOT / "flowise-proxy-service-py" / ".env"
     existing_key = None
     
     if proxy_env.exists():
@@ -495,7 +521,7 @@ def configure_all_services(jwt_access: str, jwt_refresh: str, flowise_api_key: s
     """Configure all service .env files"""
     print_info("Configuring all services...")
     
-    base_path = Path.cwd()
+    base_path = WORKSPACE_ROOT
     
     # Auth Service
     auth_env = base_path / "auth-service" / ".env"
@@ -539,7 +565,7 @@ def start_service(service_name: str, wait_time: int = 10) -> bool:
     """Start a service using docker compose directly to avoid blocking on batch pauses"""
     print_info(f"Starting {service_name}...")
     
-    service_dir = Path.cwd() / service_name
+    service_dir = WORKSPACE_ROOT / service_name
     
     # Determine the docker-compose file to use
     compose_file = "docker-compose.yml"
@@ -873,7 +899,7 @@ def check_existing_config() -> bool:
     Check if configuration files already exist and inform user.
     Returns: True if user wants to continue, False if they want to abort.
     """
-    base_path = Path.cwd()
+    base_path = WORKSPACE_ROOT
     auth_env = base_path / "auth-service" / ".env"
     
     if auth_env.exists():
@@ -897,6 +923,10 @@ def check_existing_config() -> bool:
 def main():
     """Main setup function"""
     print_header("ChatProxyPlatform - Automated Setup")
+    
+    # Show workspace location
+    print_info(f"Workspace: {WORKSPACE_ROOT}")
+    print()
     
     if not check_admin():
         print_warning("Script is not running as Administrator.")
@@ -925,6 +955,10 @@ def main():
         print_error("Python version is too old. Please upgrade to Python 3.8+")
         return 1
     
+    if not check_nodejs():
+        print_error("Node.js is not available. Please install Node.js LTS and try again.")
+        return 1
+    
     if not check_git():
         print_warning("Git is not available. Some features may not work.")
     
@@ -948,7 +982,7 @@ def main():
         print_error(f"Permission denied creating {volume_base}")
         print_warning("Please run this script as Administrator or choose a non-system drive.")
         print_info("Trying fallback to local directory...")
-        volume_base = Path.cwd() / "docker_volumes"
+        volume_base = WORKSPACE_ROOT / "docker_volumes"
         volume_base.mkdir(parents=True, exist_ok=True)
         # We need to re-run configuration with new path if fallback is used
         configure_docker_volumes(str(volume_base).replace("\\", "/"))
