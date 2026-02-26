@@ -167,27 +167,22 @@ if %NEED_INSTALL%==1 (
     echo.
     
     if %NEED_REBOOT%==1 (
-        echo [IMPORTANT] Docker Desktop was installed and requires:
+        echo ================================================================================
+        echo [IMPORTANT] Docker Desktop Installation Requires Restart
+        echo ================================================================================
         echo.
-        echo   1. RESTART YOUR COMPUTER to enable WSL2
+        echo Docker Desktop was installed and requires WSL2 to be enabled.
+        echo.
+        echo Please:
+        echo   1. RESTART YOUR COMPUTER (manually)
         echo   2. After restart, open Docker Desktop from Start Menu
         echo   3. Wait for Docker to fully start (green checkmark in system tray)
         echo   4. Run this script again: automated_setup.bat
         echo.
         echo ================================================================================
         echo.
-        choice /C YN /M "Restart computer now"
-        if !errorlevel!==1 (
-            echo Restarting in 10 seconds... (Press Ctrl+C to cancel)
-            timeout /t 10
-            shutdown /r /t 0
-            exit /b 0
-        ) else (
-            echo.
-            echo Please restart manually, then run automated_setup.bat again
-            pause
-            exit /b 0
-        )
+        pause
+        exit /b 0
     ) else (
         echo [IMPORTANT] Please restart this terminal (close and reopen) for PATH changes
         echo Then run this script again: automated_setup.bat
