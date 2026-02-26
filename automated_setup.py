@@ -204,9 +204,16 @@ def check_drive_space() -> Dict[str, Tuple[float, float]]:
 def select_data_drive(drives: Dict[str, Tuple[float, float]]) -> str:
     """
     Select the best drive for Docker volumes
-    Prefers drives with >10GB free space
+    Prefers D: drive if available with >10GB free space
+    Otherwise prefers drives with >10GB free space
     """
     print_info("Selecting drive for Docker volumes...")
+    
+    # Prefer D: drive if it exists and has sufficient space (>10GB)
+    if 'D' in drives and drives['D'][0] > 10:
+        free_gb = drives['D'][0]
+        print_success(f"Selected drive D: with {free_gb:.1f} GB free (preferred data drive)")
+        return 'D'
     
     # Find drive with most free space and >10GB available
     best_drive = None
