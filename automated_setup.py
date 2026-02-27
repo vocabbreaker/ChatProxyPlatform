@@ -191,7 +191,7 @@ def check_nodejs() -> bool:
     print_success(f"Node.js found: {stdout.strip()}")
     
     # Check npm
-    code, stdout, stderr = run_command(["npm", "--version"])
+    code, stdout, stderr = run_command(["npm", "--version"], shell=True)
     if code != 0:
         print_error("npm is not available")
         return False
